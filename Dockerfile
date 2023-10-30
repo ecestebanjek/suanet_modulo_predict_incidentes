@@ -1,8 +1,10 @@
 # app/Dockerfile
 
-FROM python:3.10.6-slim
+FROM python:3.11
 
 WORKDIR /mod3_planea_incidentes
+
+RUN pip3 install --upgrade pip
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -14,9 +16,10 @@ RUN apt-get update && apt-get install -y \
 RUN git clone https://github.com/ecestebanjek/suanet_modulo_predict_incidentes.git .
 
 RUN pip3 install -r requirements.txt
+RUN pip3 install tensorflow
 
 EXPOSE 8501
 
 HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
 
-ENTRYPOINT ["streamlit", "run", "app_sim_inc.py", "--server.port=8501", "--server.address=0.0.0.0"]
+ENTRYPOINT ["streamlit", "run", "app_pred_inc.py", "--server.port=8501", "--server.address=0.0.0.0"]
