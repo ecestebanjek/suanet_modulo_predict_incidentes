@@ -87,12 +87,12 @@ if predecir:
     with st.spinner('Wait for it...'):
         ## CARGAR EL MODELO
         #d = pd.read_csv(r"data\incidentes_sdm_2019_2023.csv")
-        d = pd.read_feather(os.path.join("data","incidentes_sdm_2020_2023"))
+        d = pd.read_feather("data/incidentes_sdm_2020_2023")
         q = d[['FECHA_x','LATITUDE','LONGITUDE']]
         q.columns = ['FECHA','LATITUD','LONGITUD']
         q['FECHA'] = pd.to_datetime(q['FECHA'])
         
-        modelo = keras.models.load_model(os.path.join('models','last_model.keras'))
+        modelo = keras.models.load_model('models/last_model.keras')
         
         fecha_min = fecha_pred - dt.timedelta(days=7)
         fecha_max = fecha_pred + dt.timedelta(days=6)
