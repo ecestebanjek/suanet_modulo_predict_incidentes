@@ -84,7 +84,7 @@ with st.form("my_form2"):
 if predecir:
     ###################### DATA
     #data = gpd.read_file("../../TRATAMIENTO DATA/outs/incidentes_sdm_2019_2023.geojson", encoding='latin-1')
-    with st.spinner('Wait for it...'):
+    with st.spinner('Corriendo predicción...'):
         ## CARGAR EL MODELO
         #d = pd.read_csv(r"data\incidentes_sdm_2019_2023.csv")
         d = pd.read_feather("data/incidentes_sdm_2020_2023")
@@ -92,7 +92,8 @@ if predecir:
         q.columns = ['FECHA','LATITUD','LONGITUD']
         q['FECHA'] = pd.to_datetime(q['FECHA'])
         
-        modelo = keras.models.load_model('models/last_model.keras')
+        ruta_modelo = os.path.join(os.getcwd(),'models','last_model.keras')
+        modelo = keras.models.load_model(ruta_modelo)
         
         fecha_min = fecha_pred - dt.timedelta(days=7)
         fecha_max = fecha_pred + dt.timedelta(days=6)
