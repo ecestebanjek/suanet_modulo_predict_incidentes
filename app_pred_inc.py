@@ -92,7 +92,7 @@ if predecir:
         q.columns = ['FECHA','LATITUD','LONGITUD']
         q['FECHA'] = pd.to_datetime(q['FECHA'])
         
-        ruta_modelo = os.path.join(os.getcwd(),'models','last_model.keras')
+        ruta_modelo = os.path.join('models','last_model.keras')
         modelo = keras.models.load_model(ruta_modelo)
         
         fecha_min = fecha_pred - dt.timedelta(days=7)
