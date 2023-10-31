@@ -46,7 +46,7 @@ def prepare_from_satialtimedf(a, gr = False):
     if gr:
         grid, nx, ny = create_grid(0.005,0.005, maxx, maxy, minx, miny)
     else:
-        grid = gpd.read_file(r"data\cuadricula_predicciones.shp")
+        grid = gpd.read_file(os.path.join("data","cuadricula_predicciones.shp"))
         grid = grid.set_crs("EPSG:4326")
         grid['g'] = grid.geometry
         dx = 0.005
@@ -166,7 +166,7 @@ def predict_convlstm(a,modelo):
     y.columns = ['ID','y']
     y['ID'] = y['ID'].astype(str).str.replace(' ','')
     
-    grid = gpd.read_file(r"data\cuadricula_predicciones.shp")
+    grid = gpd.read_file(os.path.join("data","cuadricula_predicciones.shp"))
     grid = grid.set_crs("WGS 84")
     grid['g'] = grid.geometry
     grid['ID'] = grid['ID'].str.replace(' ','')
