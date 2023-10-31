@@ -1,6 +1,6 @@
 # app/Dockerfile
 
-FROM python:3.11
+FROM python:3.10.6
 
 WORKDIR /mod3_planea_incidentes
 
