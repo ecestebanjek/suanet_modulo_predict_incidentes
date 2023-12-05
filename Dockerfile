@@ -13,10 +13,12 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
+RUN pip install --upgrade pip
+
 RUN git clone https://github.com/ecestebanjek/suanet_modulo_predict_incidentes.git .
 
 RUN pip3 install -r requirements.txt
-RUN pip3 install tensorflow==2.14.0
+#RUN pip3 install tensorflow==2.14.0
 
 EXPOSE 8501
 

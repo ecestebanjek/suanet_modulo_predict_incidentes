@@ -81,19 +81,19 @@ def prepare_from_satialtimedf(a, gr = False):
     return df,nx, ny
 def extract_day_matrix(df, nx, ny):
     df = df.reset_index()
-    matrix_day = np.zeros((nx, ny,6))
-    for a in range(nx):
-        for b in range(ny):
-            matrix_day[a][b][1] = df.loc[0,'WEEK_DAY']
-            matrix_day[a][b][2] = df.loc[0,'YEAR_DAY']
-            matrix_day[a][b][3] = df.loc[0,'MONTH']
-            matrix_day[a][b][4] = df.loc[0,'MONTH_DAY']
-            matrix_day[a][b][5] = df.loc[0,'WEEK_END']
+    matrix_day = np.zeros((nx, ny))
+    # for a in range(nx):
+    #     for b in range(ny):
+    #         matrix_day[a][b][1] = df.loc[0,'WEEK_DAY']
+    #         matrix_day[a][b][2] = df.loc[0,'YEAR_DAY']
+    #         matrix_day[a][b][3] = df.loc[0,'MONTH']
+    #         matrix_day[a][b][4] = df.loc[0,'MONTH_DAY']
+    #         matrix_day[a][b][5] = df.loc[0,'WEEK_END']
     
     for i in range(len(df)):
         x = df.loc[i,'x']-1
         y = df.loc[i,'y']-1
-        matrix_day[y][x][0] = df.loc[i,'COUNTS']
+        matrix_day[y][x] = df.loc[i,'COUNTS']
     return matrix_day
 
 
@@ -101,21 +101,21 @@ def extract_day_matrix(df, nx, ny):
 def crear_window_tensor(matriz_tot, batch):
     dataset = tf.convert_to_tensor(matriz_tot)
     dataset = tf.data.Dataset.from_tensor_slices(dataset)
-    dataset = dataset.window(14, shift=7, drop_remainder=True)
+    dataset = dataset.window(8, shift=1, drop_remainder=True)
     dataset = dataset.flat_map(lambda window: window.batch(14))
-    dataset = dataset.map(lambda window: (window[:-7], window[7:,:,:,0:1]))
+    dataset = dataset.map(lambda window: (window[:-7], window[1:]))
     dataset = dataset.batch(batch).prefetch(1)
     return dataset
 
 def crear_window_tensor_pred(matriz_tot, batch):
     dataset = tf.convert_to_tensor(matriz_tot)
     dataset = tf.data.Dataset.from_tensor_slices(dataset)
-    dataset = dataset.window(14, shift=7, drop_remainder=True)
-    dataset = dataset.flat_map(lambda window: window.batch(14))
+    dataset = dataset.window(8, shift=1, drop_remainder=True)
+    dataset = dataset.flat_map(lambda window: window.batch(1))
     #dataset = dataset.window(7, drop_remainder=True)
     #dataset = dataset.flat_map(lambda window: window.batch(7))
     #dataset = dataset.map(lambda window: (window, window[7:,:,:,0:1]))
-    dataset = dataset.map(lambda window: (window[:-7], window[7:,:,:,0:1]))
+    dataset = dataset.map(lambda window: (window[0:7], window[1:]))
     dataset = dataset.batch(batch)
     return dataset
 
@@ -138,9 +138,9 @@ def predict_convlstm(a,modelo):
     # ### Crea el modelo
     # ### Imprime las imagenes reales y predichas de una predicción
     y_pred = modelo.predict(t_test)
-    y_pred = tf.squeeze(y_pred[0,0:1,:,:,0]).numpy()
+    y_pred = tf.squeeze(y_pred[0,0:1]).numpy()
     for x,y in t_test:
-        y = tf.squeeze(y[0,0:1,:,:,0]).numpy()
+        y = tf.squeeze(y[0,0:1]).numpy()
         break
     ## Extrayendo primera predicción de y_pred
     tuplas = []
@@ -191,7 +191,7 @@ def predict_convlstm(a,modelo):
     # grid.plot(column="y")
 
     ## Choroplet
-    fig1 = px.choropleth_mapbox(grid,height =  800, width=700,
+    fig1 = px.choropleth_mapbox(grid,height =  1000, width=1000,
                            geojson=grid.geometry,
                            locations=grid.index,
                            color_continuous_scale="reds",
@@ -205,7 +205,7 @@ def predict_convlstm(a,modelo):
     )
     #fig1.show()
     
-    fig2 = px.choropleth_mapbox(grid,height = 800, width=700,
+    fig2 = px.choropleth_mapbox(grid,height = 1000, width=1000,
                            geojson=grid.geometry,
                            locations=grid.index,
                            color_continuous_scale="reds",
