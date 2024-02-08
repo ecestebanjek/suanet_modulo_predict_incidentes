@@ -30,7 +30,6 @@ import math
 import shapefile as shp
 from sklearn.preprocessing import MinMaxScaler
 import folium
-import os
 
 ### Libreria de simulaciones
 import lib.pred_library as pred
@@ -52,44 +51,43 @@ st.set_page_config(
 @st.cache_data
 def consult_data(fecha):
     fecha_inicial0 = fecha - dt.timedelta(days=7)
-    fecha_final0 = fecha + dt.timedelta(days=7)
+    fecha_final0 = fecha #+ dt.timedelta(days=7)
     fecha_inicial = fecha_inicial0.strftime('%Y-%m-%d %H:%M:%S')
     fecha_final = fecha_final0.strftime('%Y-%m-%d %H:%M:%S')
     ## CONEXIÓN A LA BASE DE DATOS
     dialect = 'oracle'
     sql_driver = 'oracledb'
     ## ORACLE SDM ## hacer esto con variables de entorno
-    un = 'BITACORA'
-    host = "172.30.6.21"
-    port = "1521"
-    sn = "BITACORA"
-    pw = 'B1tac0r2023*'
+    un = os.environ["UNSN"]
+    host = os.environ["HOST"]
+    port = os.environ["PORT"]
+    sn = os.environ["UNSN"]
+    pw = os.environ["P"]
     # try:
-    # try:
-    #     to_engine: str = dialect + '+' + sql_driver + '://' + un + ':' + pw + '@' + host + ':' + str(port) + '/?service_name=' + sn
-    #     connection = sa.create_engine(to_engine)
-    #     query = f"SELECT INCIDENTNUMBER, LATITUDE, LONGITUDE, INCIDENTDATE FROM MV_INCIDENT WHERE INCIDENTDATE BETWEEN TO_TIMESTAMP('{fecha_inicial}', 'YYYY-MM-DD HH24:MI:SS') AND TO_TIMESTAMP('{fecha_final}', 'YYYY-MM-DD HH24:MI:SS')"
-    #     # test_df = pd.read_sql_query('SELECT INCIDENTNUMBER, LATITUDE, LONGITUDE, INCIDENTDATE FROM MV_INCIDENT WHERE INCIDENTDATE BETWEEN TO_TIMESTAMP("' + str(fecha_inicial) + '") AND TO_TIMESTAMP("'+ str(fecha_final)+'"), "YYYY-MM-DD HH24:MI:SS"', connection)
-    #     test_df = pd.read_sql_query(query, connection)
-    #     ## Selección especifica de dias
-    #     test_df = test_df[test_df['latitude']!=0]
-    #     test_df = test_df[['incidentdate','latitude','longitude']]
-    #     st.info('Base de datos consultada - '+str(test_df.shape[0]) + " incidentes consultados entre " + str(test_df.incidentdate.min()) + " y " + str(test_df.incidentdate.max()))
-    #     test_df.columns = ['FECHA','LATITUD','LONGITUD']
-    #     test_df['FECHA'] = pd.to_datetime(test_df['FECHA'])
-    #     return test_df
-    # except:
-    d = pd.read_feather("data/incidentes_sdm_2020_2023")
-    q = d[['FECHA_x','LATITUDE','LONGITUDE']]
-    q.columns = ['FECHA','LATITUD','LONGITUD']
-    q['FECHA'] = pd.to_datetime(q['FECHA'])
-
-    fecha_min = fecha - dt.timedelta(days=7)
-    # fecha_max = fecha #+ dt.timedelta(days=6)
-    fecha_max = fecha + dt.timedelta(days=6)
-    data_pred = q[(q['FECHA'].dt.date >= fecha_min) & (q['FECHA'].dt.date <= fecha_max)]
-    #st.info('Base de datos consultada - '+str(data_pred.shape[0]) + " incidentes consultados entre " + str(data_pred.FECHA.min()) + " y " + str(data_pred.FECHA.max()))
-    return data_pred
+    try:
+        to_engine: str = dialect + '+' + sql_driver + '://' + un + ':' + pw + '@' + host + ':' + str(port) + '/?service_name=' + sn
+        connection = sa.create_engine(to_engine)
+        query = f"SELECT INCIDENTNUMBER, LATITUDE, LONGITUDE, INCIDENTDATE FROM MV_INCIDENT WHERE INCIDENTDATE BETWEEN TO_TIMESTAMP('{fecha_inicial}', 'YYYY-MM-DD HH24:MI:SS') AND TO_TIMESTAMP('{fecha_final}', 'YYYY-MM-DD HH24:MI:SS')"
+        # test_df = pd.read_sql_query('SELECT INCIDENTNUMBER, LATITUDE, LONGITUDE, INCIDENTDATE FROM MV_INCIDENT WHERE INCIDENTDATE BETWEEN TO_TIMESTAMP("' + str(fecha_inicial) + '") AND TO_TIMESTAMP("'+ str(fecha_final)+'"), "YYYY-MM-DD HH24:MI:SS"', connection)
+        test_df = pd.read_sql_query(query, connection)
+        ## Selección especifica de dias
+        test_df = test_df[test_df['latitude']!=0]
+        test_df = test_df[['incidentdate','latitude','longitude']]
+        st.info('Base de datos consultada - '+str(test_df.shape[0]) + " incidentes consultados entre " + str(test_df.incidentdate.min()) + " y " + str(test_df.incidentdate.max()))
+        test_df.columns = ['FECHA','LATITUD','LONGITUD']
+        test_df['FECHA'] = pd.to_datetime(test_df['FECHA'])
+        return test_df
+    except:
+        d = pd.read_feather("data/incidentes_sdm_2020_2023")
+        q = d[['FECHA_x','LATITUDE','LONGITUDE']]
+        q.columns = ['FECHA','LATITUD','LONGITUD']
+        q['FECHA'] = pd.to_datetime(q['FECHA'])
+        fecha_min = fecha - dt.timedelta(days=7)
+        # fecha_max = fecha #+ dt.timedelta(days=6)
+        fecha_max = fecha + dt.timedelta(days=6)
+        data_pred = q[(q['FECHA'].dt.date >= fecha_min) & (q['FECHA'].dt.date <= fecha_max)]
+        #st.info('Base de datos consultada - '+str(data_pred.shape[0]) + " incidentes consultados entre " + str(data_pred.FECHA.min()) + " y " + str(data_pred.FECHA.max()))
+        return data_pred
 
 ################################# PAGINA DE INICIO
 ## Show in webpage
@@ -124,7 +122,7 @@ with st.form("my_form2"):
     st.write("DEFINIR PARÁMETROS DE PREDICCIÓN")
     header1 = st.columns([1,1])
     row1 = st.columns([1,1])
-    fecha_pred = row1[0].date_input("Define la fecha a predecir",min_value= dt.datetime(2022,1,1), max_value = dt.date.today(), value=dt.datetime(2022,12,5) )
+    fecha_pred = row1[0].date_input("Define la fecha a predecir",min_value= dt.datetime(2024,1,1), max_value = dt.date.today() + dt.timedelta(days=1), value=dt.date.today() + dt.timedelta(days=1) )
     predecir = st.form_submit_button('PREDECIR')
 
 plot3, plot1, plot2 = st.columns((1,30,1))
@@ -152,14 +150,17 @@ if predecir:
         # q.columns = ['FECHA','LATITUD','LONGITUD']
         # q['FECHA'] = pd.to_datetime(q['FECHA'])
         data_pred = consult_data(fecha_pred)
-        ruta_modelo = os.path.join('models','last_model_2.h5')
-        modelo = keras.models.load_model(ruta_modelo)
-        
-        a,b = pred.predict_convlstm(data_pred,modelo)
-        # plot3, plot1, plot2 = st.columns((1,30,1))
-        with plot1:
-            st.markdown("#### INCIDENTES PREDICHOS")
-            map.plotly_chart(a, use_container_width=True)
+        if data_pred.shape[0]>1:
+            ruta_modelo = os.path.join('models','last_model_2.h5')
+            modelo = keras.models.load_model(ruta_modelo)
+            
+            a,b = pred.predict_convlstm(data_pred,modelo)
+            # plot3, plot1, plot2 = st.columns((1,30,1))
+            with plot1:
+                st.markdown("#### INCIDENTES PREDICHOS")
+                map.plotly_chart(a, use_container_width=True)
+        else:
+            st.error('No se encontraron datos')
         
         # plot1.plotly_chart(a, use_container_width=True)
         # plot2.markdown("## INCIDENTES REALES")
